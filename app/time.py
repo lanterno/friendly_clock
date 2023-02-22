@@ -32,7 +32,6 @@ class Time:
 
         Raises TimeParserException if time not in correct format
         """
-
         time_re = re.compile("^(?P<hh>\d{2}):(?P<mm>\d{2})$")
         match = time_re.match(time_as_str)
         if not match:
@@ -46,23 +45,25 @@ class Time:
         return cls(hour, minute, pm)
 
     def humanize(self):
-        if self.is_oclock and self.hour == 0:  # midday or midnight
+        """
+        Displays the time in a human-friendly format
+        """
+        if self.hour == 0 and self.is_oclock:  # midday or midnight
             return TimeConstants.MIDDAY if self.pm else TimeConstants.MIDNIGHT
 
-        pm_str = TimeConstants.PM if self.pm else TimeConstants.AM
-
-        if self.is_oclock:
-            return f"{convert_number_to_str(self.hour)} {TimeConstants.OCLOCK} {pm_str}"
+        pm = self.pm
+        if self.minute == 0:
+            display = f"{convert_number_to_str(self.hour)} {TimeConstants.OCLOCK}"
         elif self.minute < 30:
-            return f"{convert_number_to_str(self.minute)} {TimeConstants.OVER_HOUR} {convert_number_to_str(self.hour)} {pm_str}"
+            display = f"{convert_number_to_str(self.minute)} {TimeConstants.OVER_HOUR} {convert_number_to_str(self.hour)}"
         elif self.minute == 30:
-            return f"{convert_number_to_str(self.hour)} {convert_number_to_str(self.minute)} {pm_str}"
+            display = f"{convert_number_to_str(self.hour)} {convert_number_to_str(self.minute)}"
         else:
-            hour = self.hour + 1
+            # adjusting for when minutes are over 30, and we want
+            # to show something like 10 to 2 PM
+            hour = (self.hour + 1) % 12  # if time passes the 12 o'clock point, we switch the PM status
             minute = 60 - self.minute
-            if hour % 12 == 0:
-                pm = not self.pm
-                pm_str = TimeConstants.PM if pm else TimeConstants.AM
-            minute_display = convert_number_to_str(minute)
-            return f"{convert_number_to_str(minute)} {TimeConstants.UNDER_HOUR} {convert_number_to_str(hour)} {pm_str}"
+            pm = pm if hour else not pm
+            display = f"{convert_number_to_str(minute)} {TimeConstants.UNDER_HOUR} {convert_number_to_str(hour)}"
 
+        return f"{display} {TimeConstants.PM if pm else TimeConstants.AM}"

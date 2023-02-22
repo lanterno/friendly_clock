@@ -9,7 +9,7 @@ class TimeConstants:
 
 
 NUMERIC_WORD_MAP = {
-    0: "",
+    0: "Twelve",
     1: "One",
     2: "Two",
     3: "Three",
@@ -47,4 +47,6 @@ def convert_number_to_str(num: int) -> str:
         return NUMERIC_WORD_MAP[num]
 
     tens = (num // 10) * 10
-    return f"{NUMERIC_WORD_MAP[tens]}{' ' if num % 10 else ''}{NUMERIC_WORD_MAP[num % 10]}"
+    if digit := num % 10:
+        return f"{NUMERIC_WORD_MAP[tens]} {NUMERIC_WORD_MAP[digit]}"
+    return f"{NUMERIC_WORD_MAP[tens]}"
