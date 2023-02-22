@@ -1,6 +1,6 @@
 import unittest
 
-from time import Time, TimeParserException
+from app.time import Time, TimeParserException
 
 
 class TestHumanizeTimeParser(unittest.TestCase):
