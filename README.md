@@ -18,3 +18,7 @@ One case I like in particular is the following
 
 The code is able to flip the time to use `5 to 12` but also able to know that
 it switched from `PM` to `AM`.
+
+I had to make an assumption that `23:55` -> `Five to Twelve AM` and not
+`Five to midnight`.
+Both options are easy to build. 
