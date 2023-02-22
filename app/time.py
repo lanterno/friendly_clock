@@ -1,6 +1,6 @@
 import re
 
-from app.helpers import TimeConstants, convert_number_to_str
+from app.helpers import TimeConstants, stringify_number
 
 
 class TimeParserException(Exception):
@@ -47,23 +47,44 @@ class Time:
     def humanize(self):
         """
         Displays the time in a human-friendly format
-        """
-        if self.hour == 0 and self.is_oclock:  # midday or midnight
-            return TimeConstants.MIDDAY if self.pm else TimeConstants.MIDNIGHT
 
-        pm = self.pm
+        Uses a simplified template system.
+        """
+
+        TEMPLATE_BUILDERS = {
+            # example: "Five o'clock"
+            "no_minutes": lambda _hour, _pm: f"{stringify_number(_hour)} o'clock {'PM' if _pm else 'AM'}",
+            # example: "Fifteen past Ten PM"
+            "over_hour": lambda _hour, _minute, _pm: f"{stringify_number(_minute)}"
+                                                     f" past {stringify_number(_hour)}"
+                                                     f" {'PM' if _pm else 'AM'}",
+
+            # example: "Fifteen Thirty"
+            "mid_hour": lambda _hour, _pm: f"{stringify_number(_hour)} Thirty {'PM' if _pm else 'AM'}",
+            # example: "Nine to Two AM"
+            "under_hour": lambda _hour, _minute, _pm: f"{stringify_number(_minute)}"
+                                                      f" to {stringify_number(_hour)}"
+                                                      f" {'PM' if _pm else 'AM'}",
+
+            # special cases: midday and midnight
+            "0:0-PM:True": lambda: TimeConstants.MIDDAY,
+            "0:0-PM:False": lambda: TimeConstants.MIDNIGHT,
+        }
+
+        # cover special cases
+        if template_builder := TEMPLATE_BUILDERS.get(f"{self.hour}:{self.minute}-PM:{self.pm}"):
+            return template_builder()
+
         if self.minute == 0:
-            display = f"{convert_number_to_str(self.hour)} {TimeConstants.OCLOCK}"
+            return TEMPLATE_BUILDERS['no_minutes'](self.hour, self.pm)
         elif self.minute < 30:
-            display = f"{convert_number_to_str(self.minute)} {TimeConstants.OVER_HOUR} {convert_number_to_str(self.hour)}"
+            return TEMPLATE_BUILDERS['over_hour'](self.hour, self.minute, self.pm)
         elif self.minute == 30:
-            display = f"{convert_number_to_str(self.hour)} {convert_number_to_str(self.minute)}"
+            return TEMPLATE_BUILDERS['mid_hour'](self.hour, self.pm)
         else:
             # adjusting for when minutes are over 30, and we want
-            # to show something like 10 to 2 PM
+            # to show something like "ten to two PM"
             hour = (self.hour + 1) % 12  # if time passes the 12 o'clock point, we switch the PM status
             minute = 60 - self.minute
-            pm = pm if hour else not pm
-            display = f"{convert_number_to_str(minute)} {TimeConstants.UNDER_HOUR} {convert_number_to_str(hour)}"
-
-        return f"{display} {TimeConstants.PM if pm else TimeConstants.AM}"
+            pm = self.pm if hour else not self.pm
+            return TEMPLATE_BUILDERS['under_hour'](hour, minute, pm)
