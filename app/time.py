@@ -1,6 +1,6 @@
 import re
 
-from app.helpers import TimeConstants, convert_number_to_str
+from app.helpers import TimeConstants, stringify_number
 
 
 class TimeParserException(Exception):
@@ -53,17 +53,17 @@ class Time:
 
         pm = self.pm
         if self.minute == 0:
-            display = f"{convert_number_to_str(self.hour)} {TimeConstants.OCLOCK}"
+            display = f"{stringify_number(self.hour)} {TimeConstants.OCLOCK}"
         elif self.minute < 30:
-            display = f"{convert_number_to_str(self.minute)} {TimeConstants.OVER_HOUR} {convert_number_to_str(self.hour)}"
+            display = f"{stringify_number(self.minute)} {TimeConstants.OVER_HOUR} {stringify_number(self.hour)}"
         elif self.minute == 30:
-            display = f"{convert_number_to_str(self.hour)} {convert_number_to_str(self.minute)}"
+            display = f"{stringify_number(self.hour)} {stringify_number(self.minute)}"
         else:
             # adjusting for when minutes are over 30, and we want
             # to show something like 10 to 2 PM
             hour = (self.hour + 1) % 12  # if time passes the 12 o'clock point, we switch the PM status
             minute = 60 - self.minute
             pm = pm if hour else not pm
-            display = f"{convert_number_to_str(minute)} {TimeConstants.UNDER_HOUR} {convert_number_to_str(hour)}"
+            display = f"{stringify_number(minute)} {TimeConstants.UNDER_HOUR} {stringify_number(hour)}"
 
         return f"{display} {TimeConstants.PM if pm else TimeConstants.AM}"

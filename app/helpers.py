@@ -34,7 +34,7 @@ NUMERIC_WORD_MAP = {
 }
 
 
-def convert_number_to_str(num: int) -> str:
+def stringify_number(num: int) -> str:
     """
     converts a number from numeric representation to string representation
     example 19 -> Nineteen
