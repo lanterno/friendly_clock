@@ -1,5 +1,7 @@
 import re
 
+from app.helpers import TimeConstants, convert_number_to_str
+
 
 class TimeParserException(Exception):
     """
@@ -17,6 +19,9 @@ class Time:
 
     @property
     def is_oclock(self):
+        """
+        Returns True if minute is zero
+        """
         return self.minute == 0
 
     @classmethod
@@ -39,3 +44,25 @@ class Time:
         hour = hour % 12
 
         return cls(hour, minute, pm)
+
+    def humanize(self):
+        if self.is_oclock and self.hour == 0:  # midday or midnight
+            return TimeConstants.MIDDAY if self.pm else TimeConstants.MIDNIGHT
+
+        pm_str = TimeConstants.PM if self.pm else TimeConstants.AM
+
+        if self.is_oclock:
+            return f"{convert_number_to_str(self.hour)} {TimeConstants.OCLOCK} {pm_str}"
+        elif self.minute < 30:
+            return f"{convert_number_to_str(self.minute)} {TimeConstants.OVER_HOUR} {convert_number_to_str(self.hour)} {pm_str}"
+        elif self.minute == 30:
+            return f"{convert_number_to_str(self.hour)} {convert_number_to_str(self.minute)} {pm_str}"
+        else:
+            hour = self.hour + 1
+            minute = 60 - self.minute
+            if hour % 12 == 0:
+                pm = not self.pm
+                pm_str = TimeConstants.PM if pm else TimeConstants.AM
+            minute_display = convert_number_to_str(minute)
+            return f"{convert_number_to_str(minute)} {TimeConstants.UNDER_HOUR} {convert_number_to_str(hour)} {pm_str}"
+
